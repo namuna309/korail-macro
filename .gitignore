@@ -1,13 +1,3 @@
-# PyInstaller 빌드 폴더
-build/
-dist/
-*.spec
-
-# 실행 파일 (.exe, .dmg, .app 등)
-*.exe
-*.dmg
-*.app
-
 # 가상환경 폴더 (사용자마다 다름)
 venv/
 .env

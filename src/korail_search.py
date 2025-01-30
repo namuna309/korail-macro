@@ -80,8 +80,6 @@ class KorailSearch:
                     
                     # 출발역 정보 제거 (예: '서울\n22:28' → '22:28')
                     departure_time = departure_time.split("\n")[-1].strip()
-                    
-                    print(f"🔍 조회된 출발 시간: {departure_time}")  # 디버깅 코드
 
                     # 예약 가능한 모든 기차 시간 저장
                     available_times.append(departure_time)
@@ -89,8 +87,8 @@ class KorailSearch:
                     # 원하는 시간과 정확히 일치하는 기차 찾기
                     if departure_time == f"{self.hour}:{self.minute:02}":
                         print(f"⏰ {departure_time} 기차 찾음!")
-                        self.reserve_seat(row)
-                        return
+                        if self.reserve_seat(row): return
+
 
                 # 원하는 기차 시간이 없으면 가장 가까운 시간 찾기
                 print(f"🧐 사용 가능한 출발 시간 목록: {available_times}")  # 디버깅 코드
@@ -104,12 +102,12 @@ class KorailSearch:
                         departure_time = departure_time.split("\n")[-1].strip()
                         if departure_time == closest_time:
                             print('예매를 시도합니다')
-                            self.reserve_seat(row)
-                            return
+                            if self.reserve_seat(row): return
+                            
 
                 # 원하는 시간도, 가장 가까운 시간도 없으면 재조회
                 self.retry_search()
-
+            print('좌석 예약 실패\n')
         except Exception as e:
             print(f"⚠️ 조회 중 오류 발생: {e}")
 
@@ -129,8 +127,10 @@ class KorailSearch:
                 seat_img.click()
                 WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//li/a[contains(@onclick, 'm_prd_mypage_main_link')]")))
                 print("🎉 예매 성공!")
+                return True
             else:
-                print("⚠️ 좌석이 매진됨. 다음 기차 확인.")
+                print("⚠️ 좌석이 매진됨.")
+                return False
 
         except Exception as e:
             print(f"⚠️ 예매 시 오류 발생: {e}")
@@ -171,7 +171,7 @@ class KorailSearch:
                 continue  # 예외 발생 시 무시하고 다음 값 처리
 
         # 현재 시간 이후의 가장 가까운 기차 찾기
-        future_times = {t: v for t, v in time_diffs.items() if t >= target_time}
+        future_times = {t: v for t, v in time_diffs.items() if t > target_time}
         if future_times:
             return future_times[min(future_times.keys())]
 

@@ -8,7 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from dotenv import load_dotenv
 
 # 환경 변수 로드
-load_dotenv()
+load_dotenv(override=True)
 
 class KorailLogin:
     def __init__(self):

@@ -1,6 +1,6 @@
 import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ✅ 필수 환경변수 입력 함수
 def get_required_input(prompt):
@@ -16,7 +16,7 @@ def get_valid_seat_type():
     """사용자가 올바른 좌석 타입을 입력할 때까지 반복 요청"""
     valid_seat_types = ["일반실", "특실/우등실", "유아", "자유석/입석"]
     while True:
-        value = input(f"💺 좌석 타입을 입력하세요 ({', '.join(valid_seat_types)} 중 하나): ").strip()
+        value = input(f"💺 좌석 타입을 입력하세요 ({', '.join(valid_seat_types)} 중 하나): ").strip() or '일반실'
         if value in valid_seat_types:
             return value
         print(f"⚠️ 잘못된 입력입니다. 다음 중 하나를 입력하세요: {', '.join(valid_seat_types)}")
@@ -25,6 +25,7 @@ def get_valid_seat_type():
 def get_valid_datetime():
     """사용자가 현재 날짜 및 시간보다 크거나 같은 값만 입력하도록 검증"""
     now = datetime.now()
+    min_departure_time = now + timedelta(minutes=21)  # 현재 시간보다 21분 이후
 
     while True:
         month = int(input(f"📅 탑승할 월을 입력하세요 (현재 월: {now.month} 이상): ").strip() or now.month)
@@ -37,17 +38,25 @@ def get_valid_datetime():
             print("⚠️ 탑승할 일은 현재 날짜보다 작을 수 없습니다.")
             continue
 
-        hour = int(input(f"⏰ 탑승할 시간을 입력하세요 (현재 시간: {now.hour} 이상): ").strip() or now.hour)
-        if month == now.month and day == now.day and hour < now.hour:
-            print("⚠️ 탑승할 시간은 현재 시간보다 작을 수 없습니다.")
-            continue
+        # ✅ 내일 이후면 시간 제한 없이 입력 가능
+        if (month, day) > (now.month, now.day):
+            hour = int(input("⏰ 탑승할 시간을 입력하세요: ").strip() or '0')
+            minute = int(input("⏳ 탑승할 분을 입력하세요: ").strip() or '0')
+            return month, day, hour, minute
 
-        minute = int(input(f"⏳ 탑승할 분을 입력하세요 (현재 분: {now.minute} 이상): ").strip() or now.minute)
-        if month == now.month and day == now.day and hour == now.hour and minute < now.minute:
-            print("⚠️ 탑승할 분은 현재 분보다 작을 수 없습니다.")
-            continue
+        # ✅ 오늘 날짜라면 현재 시간보다 크거나 같은 시간 입력 필요
+        while True:
+            hour = int(input(f"⏰ 탑승할 시간을 입력하세요 (현재 시간: {min_departure_time.hour} 이상): ").strip() or min_departure_time.hour)
+            if hour < now.hour:
+                print("⚠️ 탑승할 시간은 현재 시간보다 작을 수 없습니다.")
+                continue
 
-        return month, day, hour, minute
+            minute = int(input(f"⏳ 탑승할 분을 입력하세요 (현재 분: {min_departure_time.minute} 이상): ").strip() or min_departure_time.minute)
+            if hour == now.hour and minute < now.minute + 20:
+                print("⚠️ 출발 시간은 현재 시간보다 최소 20분 이후여야 합니다.")
+                continue
+
+            return month, day, hour, minute
 
 # ✅ 사용자 입력을 받아 환경변수 업데이트하는 함수
 def update_env():
@@ -68,7 +77,11 @@ def update_env():
             value = get_required_input(prompt)
         else:
             # 선택 입력값 (입력하지 않으면 기존 값 유지)
-            value = input(f"{prompt} [{os.getenv(key, '')}]: ").strip() or os.getenv(key, "")
+            value = input(f"{prompt} [{os.getenv(key, '')}]: ").strip()
+            if value == '':
+                if key == 'START_STATION': value = '서울'
+                elif key == 'END_STATION': value = '부산'
+                elif key == 'MAX_RETRIES': value = '5'
 
         new_env_data.append(f"{key}={value}")
 
@@ -91,14 +104,29 @@ def update_env():
 
 # ✅ `requirements.txt` 내 패키지를 설치하는 함수
 def install_requirements():
-    print("\n📦 `requirements.txt` 기반으로 필요한 패키지를 설치합니다...\n")
-    subprocess.run(["pip", "install", "-r", "requirements.txt"], check=True)
+    """requirements.txt 기반으로 패키지 설치"""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 프로젝트 루트 경로
+    requirements_path = os.path.join(base_dir, "requirements.txt")
+
+    if not os.path.exists(requirements_path):
+        print(f"❌ ERROR: requirements.txt 파일을 찾을 수 없습니다: {requirements_path}")
+        return
+
+    print(f"\n📦 requirements.txt 경로: {requirements_path}\n")
+    subprocess.run(["pip", "install", "-r", requirements_path], check=True)
     print("\n✅ 패키지 설치가 완료되었습니다.\n")
 
 # ✅ `korail_macro.py` 실행
 def run_macro():
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 프로젝트 루트 경로
+    macro_path = os.path.join(base_dir, "src/korail_macro.py")
+
+    if not os.path.exists(macro_path):
+        print(f"❌ ERROR: korail_macro.py 파일을 찾을 수 없습니다: {macro_path}")
+        return
+
     print("\n🚀 `korail_macro.py`를 실행합니다...\n")
-    subprocess.run(["python", "korail_macro.py"])
+    subprocess.run(["python", macro_path], check=True)
 
 if __name__ == "__main__":
     update_env()           # 1️⃣ 환경변수 설정
