@@ -44,16 +44,15 @@ class KorailLogin:
     def close_popups(driver):
         """로그인 후 자동 팝업창 닫기"""
         try:
-            WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(2))
             main_window = driver.current_window_handle
-
-            for window in driver.window_handles:
-                if window != main_window:
-                    driver.switch_to.window(window)
-                    driver.close()
-
-            driver.switch_to.window(main_window)
-            print("✅ 모든 팝업창 닫기 완료!")
+            if len(driver.window_handles) > 1:
+                for window in driver.window_handles:
+                    if window != main_window:
+                        driver.switch_to.window(window)
+                        driver.close()
+    
+                driver.switch_to.window(main_window)
+                print("✅ 모든 팝업창 닫기 완료!")
 
         except Exception as e:
             print(f"⚠️ 팝업창 닫기 중 오류 발생: {e}")

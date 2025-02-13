@@ -11,15 +11,45 @@ def get_required_input(prompt):
             return value
         print("⚠️ 이 값은 반드시 입력해야 합니다.")
 
-# ✅ `SEAT_TYPE` 검증 함수
+# ✅ `SEAT_CLASS` 검증 함수
+def get_valid_seat_class():
+    """사용자가 올바른 좌석 등급을 입력할 때까지 반복 요청"""
+    valid_seat_classes = ["일반실", "특실/우등실", "유아", "자유석/입석"]
+    while True:
+        value = input(f"💺 좌석 등급을 입력하세요 ({', '.join(valid_seat_classes)} 중 하나): ").strip() or '일반실'
+        if value in valid_seat_classes:
+            return value
+        print(f"⚠️ 잘못된 입력입니다. 다음 중 하나를 입력하세요: {', '.join(valid_seat_classes)}")
+
+# ✅ `SEAT_CLASS` 검증 함수
 def get_valid_seat_type():
     """사용자가 올바른 좌석 타입을 입력할 때까지 반복 요청"""
-    valid_seat_types = ["일반실", "특실/우등실", "유아", "자유석/입석"]
+    valid_seat_types = ["기본", "1인석", "창측좌석", "내측좌석"]
     while True:
-        value = input(f"💺 좌석 타입을 입력하세요 ({', '.join(valid_seat_types)} 중 하나): ").strip() or '일반실'
+        value = input(f"💺 좌석 타입을 입력하세요 ({', '.join(valid_seat_types)} 중 하나): ").strip() or '기본'
         if value in valid_seat_types:
             return value
         print(f"⚠️ 잘못된 입력입니다. 다음 중 하나를 입력하세요: {', '.join(valid_seat_types)}")
+
+# ✅ `SEAT_CLASS` 검증 함수
+def get_valid_seat_direction():
+    """사용자가 올바른 좌석 방향을 입력할 때까지 반복 요청"""
+    valid_seat_directions = ["좌석방향", "순방향석", "역방향석"]
+    while True:
+        value = input(f"💺 좌석 방향을 입력하세요 ({', '.join(valid_seat_directions)} 중 하나): ").strip() or '좌석방향'
+        if value in valid_seat_directions:
+            return value
+        print(f"⚠️ 잘못된 입력입니다. 다음 중 하나를 입력하세요: {', '.join(valid_seat_directions)}")
+
+# ✅ `SEAT_CLASS` 검증 함수
+def get_valid_seat_discount_type():
+    """사용자가 올바른 좌석 할인 유형을 입력할 때까지 반복 요청"""
+    valid_seat_discount_types = ["기본", "유아동반", "편한대화", "수동휠체어석", "전동휠체어석", "수유실 인접", "자전거거치대"]
+    while True:
+        value = input(f"💺 좌석 할인 유형을 입력하세요 ({', '.join(valid_seat_discount_types)} 중 하나): ").strip() or '기본'
+        if value in valid_seat_discount_types:
+            return value
+        print(f"⚠️ 잘못된 입력입니다. 다음 중 하나를 입력하세요: {', '.join(valid_seat_discount_types)}")
 
 # ✅ 날짜 및 시간 검증 함수
 def get_valid_datetime():
@@ -85,9 +115,23 @@ def update_env():
 
         new_env_data.append(f"{key}={value}")
 
+    # ✅ `SEAT_CLASS` 입력 (검증된 값만 허용)
+    seat_class = get_valid_seat_class()
+    new_env_data.append(f"SEAT_CLASS={seat_class}")
+
     # ✅ `SEAT_TYPE` 입력 (검증된 값만 허용)
     seat_type = get_valid_seat_type()
     new_env_data.append(f"SEAT_TYPE={seat_type}")
+
+    # ✅ `SEAT_DIRECTION` 입력 (검증된 값만 허용)
+    seat_dir = get_valid_seat_direction()
+    new_env_data.append(f"SEAT_DIRECTION={seat_dir}")
+
+    # ✅ `SEAT_DISCOUNT` 입력 (검증된 값만 허용)
+    seat_dsct = get_valid_seat_discount_type()
+    new_env_data.append(f"SEAT_DISCOUNT={seat_dsct}")
+
+    
 
     # ✅ `MONTH`, `DAY`, `HOUR`, `MINUTE` 검증 (현재 시간보다 크거나 같아야 함)
     month, day, hour, minute = get_valid_datetime()
